@@ -18,6 +18,56 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
+  <developers>
+    <developer>
+      <id>ntimofeev</id>
+      <name>Nikita Timofeev</name>
+      <email>ntimofeev@objectstyle.com</email>
+      <organization>ObjectStyle</organization>
+      <timezone>Europe/Minsk</timezone>
+    </developer>
+  </developers>
+
+  <scm>
+    <developerConnection>scm:git:ssh://git@github.com/bootique-tools/${project.artifactId}</developerConnection>
+    <url>https://github.com/bootique-tools/${project.artifactId}</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>Apache 2.0 License</name>
+      <url>https://github.com/bootique-tools/bootique-maven-plugin/blob/master/LICENSE</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <distributionManagement>
+    <repository>
+      <id>bintray-bootique-releases</id>
+      <name>bintray-bootique-releases</name>
+      <url>https://api.bintray.com/maven/bootique/releases/${project.artifactId}/;publish=1</url>
+    </repository>
+    <snapshotRepository>
+      <id>bootique-snapshots</id>
+      <name>oss-jfrog-artifactory-snapshots</name>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>bootique-snapshots</id>
+      <url>https://oss.jfrog.org/artifactory/libs-snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>

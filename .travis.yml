@@ -1,0 +1,41 @@
+# Licensed to ObjectStyle LLC under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ObjectStyle LLC licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+language: java
+
+jdk:
+  - openjdk8
+  - openjdk11
+  - openjdk-ea
+
+# This prevents Travis from running "mvn install" on its own before running our script
+install: true
+
+script:
+  - mvn clean verify
+
+jobs:
+  include:
+    - stage: deploy
+      jdk: openjdk8
+      script: mvn clean deploy -DskipTests --settings travis_settings.xml
+      if: branch IN (master) AND type = push AND repo = bootique-tools/bootique-maven-plugin
+
+# travis encrypt -r bootique-tools/bootique-maven-plugin "CI_DEPLOY_USERNAME='bintray-username'"
+# travis encrypt -r bootique-tools/bootique-maven-plugin "CI_DEPLOY_PASSWORD='bintray-api-key'"
+env:
+  global:
+    - secure: "dDcar0GtxC7/Ays8G6ocMfyC+X6067kqImpzFE1UWMMAjZQ0MbI/MPC65L+mVTC3As/cowJiOZynypA8Bp1kjhOium6VPjQn5pdWcnGIPogBgrpuhGYVgqcIWYVXB5h1WhKEmIya22TuV6lgpPXv2FIHqBcQOwEGJgBobyF7+9G2KkXCN2R/ZDZMmQTlr370zgmZPIJzsXgOksHp7ga0PpUctwT4q0UFqeuxyW5bumLNwbOiqiE5ClsR/KM0aQuMVkxdnu2oP1uggYD7siL3hTPVYbwWxCERr/rHw7FC3AcTKVj3+10BTDfDKezkFXapWSgcJR5v90Ag9I3WcTyAWItQdbJ/QYO4kKqKXvLY+KnerKJ5k5mRSI7vmF/dGstTkissfIZxqYu1SnO6LmhRbw1t92God9W6YQ+s4wEOfyohgrxLy0q97BYolIryHkPvrCLFX6zfmcGo4smKvVtYGQ4NMq8OfAChlFY8MDKJ+pGTJaImezGeKtuD/hp/zpEveNUFNJwPNvdmRmzmlqbesfny8Q9aKKdFM+lYgLdRQhaQZnx5Y+AGaPoe0CL9DU4q3ruWpeHoC4AlW5WU856HiITXevbBx2Z8pbcotk5OrXmltD7FWCEIs7lLWPtWTTDLGDRVNaQdPfl+rZ0B8mXcD2E884OwsPCqvkgWzEZyYoQ="
+    - secure: "rcTGc2fZHovEhqYIl+kWv7gnd8RKNkYRdW5mmxOEVX8bneYJNoZ+P8A0K+uFugfWdDob8AiBrMfm5kBsjdid+x7V3Xw8WhjQWSdoz4MA5YRLUA+AF4lGIoXl07qXD05LS57mCgswwi3uFxEEkElLoPR4hu5MFu/TNjGiznnCCSEH/gQCsmA3tMlEE9C1c8ar4dTOCaBn0eLtxOZ3kcVSPekFNKFkZB5L31ee5vJWTlz2/jFW4coU1OC0NOnhKh9k4CtoMHpiblzSs1F6onHe82JukmFLl3llT7uGfbQd559+j31hp6LxyZAq4phPqOa61mYLpDOOkuCQKFt9lJNsN6BP58ZJDHu7O7oz+6R7COANQL8BIRp+mRVmHnblP7h7AAcmy49WmqKIg0LX9b+x2wDEbRe4Eh2Eu1JNLvWJznxE+MqV5aSfoxofvg+OWV+rvwWWjcK003vrnHR9MKFaxc9odt/iva9vzEfQ3qskOMnxFlYZtMRjElC1uar1UfdveVMT/UqXoMphK0xRylCpOA7hikP/xvdv4B3imaKqh/yqQKOAZhdgb9MhYcG7E+w/dAFeDkBIgwkDxIGfQuUA5Wke4vXvBaE/ahFWYR/WswZD9ov/7NQMEpHCkhJjgTtIheOSxIQZKATm2kehyQYnXkIeupEDmJfXeib5lacyPY0="
