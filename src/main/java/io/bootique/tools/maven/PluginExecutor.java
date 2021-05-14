@@ -79,6 +79,10 @@ public class PluginExecutor {
         }
     }
 
+    public MavenProject getMavenProject() {
+        return mavenProject;
+    }
+
     public Log getLog() {
         return log;
     }

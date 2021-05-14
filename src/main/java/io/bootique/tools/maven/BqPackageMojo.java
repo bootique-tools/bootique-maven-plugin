@@ -5,6 +5,7 @@ import io.bootique.tools.maven.recipe.Recipe;
 import io.bootique.tools.maven.recipe.ShadeRecipe;
 
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -15,6 +16,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+
+import java.io.File;
+import java.util.Map;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
@@ -47,6 +51,13 @@ public class BqPackageMojo extends AbstractMojo {
     @Parameter(defaultValue = "assembly")
     private String mode;
 
+    /**
+    * If custom maven-jar-plugin declared in pom files of project, this flag must be on to use it
+    */
+    @Parameter(name = "useCustomJar", defaultValue = "false")
+    private String useCustomJar;
+
+
     public void execute() throws MojoExecutionException {
         ExecutionEnvironment environment = executionEnvironment(
                 mavenProject,
@@ -72,6 +83,7 @@ public class BqPackageMojo extends AbstractMojo {
                 recipe = new AssemblyRecipe(pluginExecutor);
         }
 
+        recipe.setUserJarPluginRequired(Boolean.parseBoolean(useCustomJar));
         recipe.execute();
     }
 
