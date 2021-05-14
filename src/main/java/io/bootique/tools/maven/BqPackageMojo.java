@@ -32,10 +32,10 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 )
 public class BqPackageMojo extends AbstractMojo {
 
-    @Component
+    @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject mavenProject;
 
-    @Component
+    @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession mavenSession;
 
     @Component
