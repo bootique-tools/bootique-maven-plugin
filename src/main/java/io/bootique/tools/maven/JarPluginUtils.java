@@ -30,83 +30,64 @@ public class JarPluginUtils {
      */
     public Xpp3Dom getAdditionalConfigurationIfNeededOrEmpty() {
         Plugin plugin = pluginExecutor.getMavenProject().getPlugin("org.apache.maven.plugins:maven-jar-plugin");
-        Xpp3Dom configuration = configuration();
-        if (plugin != null) {
-            Object objConfiguration = plugin.getConfiguration();
-            configuration = (Xpp3Dom) objConfiguration;
-            String newClassifier = generateClassifierForConfiguration(configuration);
+        if(plugin == null) {
+            return configuration();
+        }
 
-            MojoExecutor.Element classifierElement = element("classifier", newClassifier);
-            if (configuration == null)
-                configuration = configuration(classifierElement);
-            else
-                configuration.addChild(classifierElement.toDom());
-
+        Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
+        MojoExecutor.Element classifierElement = element("classifier", generateClassifier());
+        if (configuration == null) {
+            configuration = configuration(classifierElement);
+        } else {
+            configuration.addChild(classifierElement.toDom());
         }
         return configuration;
     }
 
-    private static String generateClassifierForConfiguration(Xpp3Dom basicConfiguration) {
-        if (basicConfiguration == null)
-            return UUID.randomUUID().toString();
-        Xpp3Dom classifier = basicConfiguration.getChild("classifier");
-        if (classifier == null)
-            return UUID.randomUUID().toString();
-        String newClassifier;
-        do {
-            newClassifier = UUID.randomUUID().toString();
-        } while (classifier.getValue().equals(newClassifier));
-        return newClassifier;
+    private static String generateClassifier() {
+        return UUID.randomUUID().toString();
     }
 
     /**
-     * @param artifact text representation of default maven-jar-plugin artifact in format groupId:artifactId:version
+     * @param defaultArtifact default artifact to use if there's no plugin defined in the pom
      * @return custom maven-jar-plugin artifact if it declared in pom files and set as needed or default
      * <p>
      * Log info message if custom plugin not found and warning if custom maven-jar-plugin detected but not selected to use
      */
-    public MavenArtifact getMavenArtifactOrDefault(String artifact) {
-        String[] parts = artifact.split(":");
-        if (parts.length != 3) {
-            throw new RuntimeException("incorrect artifact syntax");
-        }
-
-        boolean jarPluginDeclaredInPomFileOrParents = jarPluginDeclaredInPomFileOrParents(parts[0], parts[1]);
-
+    public MavenArtifact getMavenArtifactOrDefault(MavenArtifact defaultArtifact) {
+        boolean jarPluginDeclared = isJarPluginDeclaredInPomFileOrParents(defaultArtifact.getGroupId(), defaultArtifact.getArtifactId());
         if (recipe.isUserJarPluginRequired()) {
-            if (!jarPluginDeclaredInPomFileOrParents) {
+            if (!jarPluginDeclared) {
                 pluginExecutor.getLog().warn("Custom maven-jar-plugin not found; Default plugin will be in use");
             } else {
-                Plugin plugin = pluginExecutor.getMavenProject().getPlugin(parts[0] + ":" + parts[1]);
+                Plugin plugin = pluginExecutor.getMavenProject().getPlugin(defaultArtifact.getGroupId() + ":" + defaultArtifact.getArtifactId());
                 if (plugin != null) {
                     return new MavenArtifact(plugin.getGroupId(), plugin.getArtifactId(), plugin.getVersion());
                 }
             }
-        } else if (jarPluginDeclaredInPomFileOrParents) {
+        } else if (jarPluginDeclared) {
             pluginExecutor.getLog().info("Custom maven-jar-plugin detected; To use it set useCustomJar" +
                     " parameter on true in bootique-maven-plugin configuration");
         }
-
-        return new MavenArtifact(parts[0], parts[1], parts[2]);
+        return defaultArtifact;
     }
 
-    private boolean jarPluginDeclaredInPomFileOrParents(String groupId, String artifactId) {
+    private boolean isJarPluginDeclaredInPomFileOrParents(String groupId, String artifactId) {
         MavenProject currentMavenProject = pluginExecutor.getMavenProject();
         while (currentMavenProject != null) {
             File pomFile = currentMavenProject.getFile();
-            if (pluginDeclaredInFile(pomFile, groupId, artifactId))
+            if (pluginDeclaredInFile(pomFile, groupId, artifactId)) {
                 return true;
+            }
             currentMavenProject = currentMavenProject.getParent();
         }
         return false;
     }
 
     private boolean pluginDeclaredInFile(File pomFile, String groupId, String artifactId) {
-        Map<String, String> nodesWithValues = new HashMap<String, String>() {{
-            put("groupId", groupId);
-            put("artifactId", artifactId);
-        }};
-
+        Map<String, String> nodesWithValues = new HashMap<>();
+        nodesWithValues.put("groupId", groupId);
+        nodesWithValues.put("artifactId", artifactId);
         return XmlUtils.hasNodeWithCurrentChildNodesValues(pomFile, "plugin", nodesWithValues);
     }
 }

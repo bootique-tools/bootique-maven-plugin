@@ -15,8 +15,8 @@ import java.util.Set;
 public class XmlUtils {
 
     /**
-     * @param pomFile file where node can be found
-     * @param rootNodeTag name of the root element of the needed node
+     * @param pomFile         file where node can be found
+     * @param rootNodeTag     name of the root element of the needed node
      * @param nodesWithValues map of pairs ['node name', 'node text value'], child node of the rootNodeTag with
      *                        current 'node name' must have text, that contains 'node text value'
      * @return true if node was found
@@ -31,33 +31,32 @@ public class XmlUtils {
             NodeList pluginElements = doc.getElementsByTagName(rootNodeTag);
             for (int i = 0; i < pluginElements.getLength(); i++) {
                 Element element = (Element) pluginElements.item(i);
-                if(elementHasValues(element, nodesWithValues))
+                if (elementHasValues(element, nodesWithValues)) {
                     return true;
+                }
             }
         } catch (ParserConfigurationException | IOException | SAXException e) {
+            // TODO: log this instead
             e.printStackTrace();
         }
         return false;
     }
 
-    private static boolean elementHasValues(Element element, Map<String, String> nodesWithValues){
-        boolean nodeHasValues = true;
+    private static boolean elementHasValues(Element element, Map<String, String> nodesWithValues) {
         Set<Map.Entry<String, String>> entries = nodesWithValues.entrySet();
         for (Map.Entry<String, String> entry : entries) {
             Node node = element.getElementsByTagName(entry.getKey()).item(0);
             if (!nodeHasText(node, entry.getValue())) {
-                nodeHasValues = false;
-                break;
+                return false;
             }
         }
-        return nodeHasValues;
+        return true;
     }
 
     private static boolean nodeHasText(Node node, String text) {
-        if (text == null)
+        if (text == null) {
             return true;
-        if (node == null)
-            return false;
-        return node.getTextContent().contains(text);
+        }
+        return node != null && node.getTextContent().contains(text);
     }
 }

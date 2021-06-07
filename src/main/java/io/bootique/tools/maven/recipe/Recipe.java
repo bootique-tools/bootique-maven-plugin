@@ -32,11 +32,14 @@ public abstract class Recipe {
     protected void executeJarPlugin() throws MojoExecutionException {
         JarPluginUtils jarPluginUtils = new JarPluginUtils(this, pluginExecutor);
 
-        MavenArtifact artifact
-                = jarPluginUtils.getMavenArtifactOrDefault("org.apache.maven.plugins:maven-jar-plugin:3.2.0");
+        MavenArtifact artifact = jarPluginUtils.getMavenArtifactOrDefault(new MavenArtifact(
+                "org.apache.maven.plugins",
+                "maven-jar-plugin",
+                "3.2.0"
+        ));
         Xpp3Dom additionalConfig = jarPluginUtils.getAdditionalConfigurationIfNeededOrEmpty();
-
         Xpp3Dom defaultConfig = getDefaultJarConfig();
+
         pluginExecutor.execute(
                 artifact,
                 goal("jar"),
