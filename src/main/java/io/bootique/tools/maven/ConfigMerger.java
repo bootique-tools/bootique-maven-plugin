@@ -16,7 +16,7 @@ public class ConfigMerger {
         this.log = Objects.requireNonNull(log);
     }
 
-    Xpp3Dom mergeWith(Xpp3Dom additionalConfig) {
+    public Xpp3Dom mergeWith(Xpp3Dom additionalConfig) {
         if(plugin != null && plugin.getConfiguration() != null && plugin.getConfiguration() instanceof Xpp3Dom) {
             Xpp3Dom existingConfig = (Xpp3Dom)plugin.getConfiguration();
             int i=0;

@@ -1,11 +1,12 @@
 package io.bootique.tools.maven.recipe;
 
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.util.*;
 
+import io.bootique.tools.maven.JarPluginUtils;
 import io.bootique.tools.maven.MavenArtifact;
 import io.bootique.tools.maven.PluginExecutor;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static java.util.Collections.singletonList;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
@@ -17,6 +18,7 @@ public class AssemblyRecipe extends Recipe {
 
     private static final String VERSION_BUNDLE = "io.bootique.tools.maven.version";
     private static final String PLUGIN_VERSION;
+
     static {
         PLUGIN_VERSION = getVersionBundle().getString("project.version");
     }
@@ -32,24 +34,15 @@ public class AssemblyRecipe extends Recipe {
         executeAssemblyPlugin();
     }
 
-    void executeJarPlugin() throws MojoExecutionException {
-        MavenArtifact artifact = new MavenArtifact(
-                "org.apache.maven.plugins",
-                "maven-jar-plugin",
-                "3.2.0"
-        );
-
-        pluginExecutor.execute(
-                artifact,
-                goal("jar"),
-                configuration(
-                        element(name("archive"),
-                                element("manifest",
-                                        element("mainClass", "${main.class}"),
-                                        element("addClasspath", "true"),
-                                        element("classpathPrefix", "lib/"),
-                                        element("useUniqueVersions", "false")
-                                )
+    @Override
+    protected Xpp3Dom getDefaultJarConfig() {
+        return configuration(
+                element(name("archive"),
+                        element("manifest",
+                                element("mainClass", "${main.class}"),
+                                element("addClasspath", "true"),
+                                element("classpathPrefix", "lib/"),
+                                element("useUniqueVersions", "false")
                         )
                 )
         );

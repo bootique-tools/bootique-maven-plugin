@@ -3,6 +3,7 @@ package io.bootique.tools.maven.recipe;
 import io.bootique.tools.maven.MavenArtifact;
 import io.bootique.tools.maven.PluginExecutor;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
@@ -21,18 +22,9 @@ public class ShadeRecipe extends Recipe {
         executeShadePlugin();
     }
 
-    void executeJarPlugin() throws MojoExecutionException {
-        MavenArtifact artifact = new MavenArtifact(
-                "org.apache.maven.plugins",
-                "maven-jar-plugin",
-                "3.2.0"
-        );
-
-        pluginExecutor.execute(
-                artifact,
-                goal("jar"),
-                configuration()
-        );
+    @Override
+    protected Xpp3Dom getDefaultJarConfig() {
+        return configuration();
     }
 
     void executeShadePlugin() throws MojoExecutionException {
