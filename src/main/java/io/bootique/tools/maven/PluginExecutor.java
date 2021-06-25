@@ -33,6 +33,8 @@ public class PluginExecutor {
 
     public void execute(MavenArtifact mavenArtifact, String goal, Xpp3Dom config) throws MojoExecutionException {
         Plugin plugin = createPlugin(mavenArtifact);
+        getLog().info("");
+        getLog().info("--- " + plugin.getArtifactId() + ":" + plugin.getVersion() + ":" + goal + " ---");
         ConfigMerger configMerger = new ConfigMerger(plugin, log);
         executeMojo(plugin, goal, configMerger.mergeWith(config), environment);
     }
@@ -79,8 +81,9 @@ public class PluginExecutor {
         }
     }
 
-    public MavenProject getMavenProject() {
-        return mavenProject;
+    public boolean hasJarPluginExecutions() {
+        Plugin jarPlugin = getExistingPlugin("org.apache.maven.plugins", "maven-jar-plugin");
+        return jarPlugin != null && !jarPlugin.getExecutions().isEmpty();
     }
 
     public Log getLog() {

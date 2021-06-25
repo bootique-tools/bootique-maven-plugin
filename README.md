@@ -11,6 +11,15 @@ Include to your project:
     <groupId>io.bootique.tools</groupId>
     <artifactId>bootique-maven-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <extensions>true</extensions> <!-- this is optional, allows to override jar plugin executions -->
+    <executions>
+        <execution>
+            <id>bq-package-assembly</id>
+            <goals>
+                <goal>bq-package</goal>
+            </goals>
+        </execution>
+    </executions>
 </plugin>
 ```
 
@@ -36,5 +45,14 @@ This is a default mode, but you can set it explicitly:
 ```xml
 <configuration>
     <mode>shade</mode>
+</configuration>
+```
+
+By default, `bq-package` will suppress all jar plugin executions and run it by itself with additional configuration.
+If you need to use default (on any other) jar plugin executions you could use `useCustomJar` configuration option:
+
+```xml
+<configuration>
+    <useCustomJar>true</useCustomJar>
 </configuration>
 ```

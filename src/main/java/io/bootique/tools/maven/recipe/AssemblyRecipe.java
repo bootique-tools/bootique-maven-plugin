@@ -1,11 +1,12 @@
 package io.bootique.tools.maven.recipe;
 
-import java.util.*;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
-import io.bootique.tools.maven.JarPluginUtils;
 import io.bootique.tools.maven.MavenArtifact;
 import io.bootique.tools.maven.PluginExecutor;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static java.util.Collections.singletonList;
@@ -23,8 +24,8 @@ public class AssemblyRecipe extends Recipe {
         PLUGIN_VERSION = getVersionBundle().getString("project.version");
     }
 
-    public AssemblyRecipe(PluginExecutor pluginExecutor) {
-        super(pluginExecutor);
+    public AssemblyRecipe(PluginExecutor pluginExecutor, boolean useCustomJar) {
+        super(pluginExecutor, useCustomJar);
     }
 
     @Override
@@ -34,17 +35,40 @@ public class AssemblyRecipe extends Recipe {
         executeAssemblyPlugin();
     }
 
-    @Override
-    protected Xpp3Dom getDefaultJarConfig() {
-        return configuration(
-                element(name("archive"),
-                        element("manifest",
-                                element("mainClass", "${main.class}"),
-                                element("addClasspath", "true"),
-                                element("classpathPrefix", "lib/"),
-                                element("useUniqueVersions", "false")
-                        )
+    protected void executeJarPlugin() throws MojoExecutionException {
+        if(pluginExecutor.hasJarPluginExecutions()) {
+            if(!useCustomJar) {
+                Log log = pluginExecutor.getLog();
+                log.warn("maven-jar-plugin default execution is enabled and the final jar could be incorrect");
+                log.warn("use <extensions>true</extensions> in the bootique-maven-plugin to fix this automatically");
+                log.warn("or set <useCustomJar>true</useCustomJar> to generate a separate jar for the package.");
+                return;
+            }
+        }
+
+        MavenArtifact artifact = new MavenArtifact(
+                "org.apache.maven.plugins",
+                "maven-jar-plugin",
+                "3.2.0"
+        );
+
+        Element baseConfig = element(name("archive"),
+                element("manifest",
+                        element("mainClass", "${main.class}"),
+                        element("addClasspath", "true"),
+                        element("classpathPrefix", "lib/"),
+                        element("useUniqueVersions", "false")
                 )
+        );
+
+        Xpp3Dom config = useCustomJar
+                ? configuration(baseConfig, element("classifier", "bq"))
+                : configuration(baseConfig);
+
+        pluginExecutor.execute(
+                artifact,
+                goal("jar"),
+                config
         );
     }
 

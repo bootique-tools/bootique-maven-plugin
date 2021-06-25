@@ -10,31 +10,34 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.util.Map;
-
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 /**
- * Goal that packages Bootique app
+ * Goal that packages application into a runnable jar.
+ * <br/>
+ * This plugins supports two packaging modes: <ul>
+ *     <li> assembly - application will be packaged into a runnable jar + /lib folder with dependencies
+ *     <li> shade - application will be package into a single jar via maven-shade-plugin
+ * </ul>
  */
 @Mojo(
         name = "bq-package",
         defaultPhase = LifecyclePhase.PACKAGE,
         requiresDependencyResolution = ResolutionScope.COMPILE
 )
-@Execute(
-        phase = LifecyclePhase.COMPILE,
-        goal = "compile"
-)
 public class BqPackageMojo extends AbstractMojo {
+
+    private static final String SHADE = "shade";
+    private static final String ASSEMBLY = "assembly";
+
+    @Component
+    private BuildPluginManager pluginManager;
 
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject mavenProject;
@@ -42,21 +45,18 @@ public class BqPackageMojo extends AbstractMojo {
     @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession mavenSession;
 
-    @Component
-    private BuildPluginManager pluginManager;
-
     /**
-     * Assembly mode. Supported modes are 'assembly' and 'shade'.
+     * Packaging mode. Supported modes are 'assembly' and 'shade'.
      */
     @Parameter(defaultValue = "assembly")
     private String mode;
 
     /**
-    * If custom maven-jar-plugin declared in pom files of project, this flag must be on to use it
-    */
-    @Parameter(name = "useCustomJar", defaultValue = "false")
-    private String useCustomJar;
-
+     * Build and use separate Jar for the package.
+     * Default value is false, i.e. this plugin will use default jar performing additional configuration.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean useCustomJar;
 
     public void execute() throws MojoExecutionException {
         ExecutionEnvironment environment = executionEnvironment(
@@ -65,25 +65,29 @@ public class BqPackageMojo extends AbstractMojo {
                 pluginManager
         );
 
+        if(mavenSession.getResult().hasExceptions()) {
+            getLog().warn("Build has failures, stop.");
+            return;
+        }
+
         getLog().info("Building Bootique app assembly.");
 
         PluginExecutor pluginExecutor = new PluginExecutor(environment, mavenProject, getLog());
 
         Recipe recipe;
         switch (mode) {
-            case "shade":
-                recipe = new ShadeRecipe(pluginExecutor);
+            case SHADE:
+                recipe = new ShadeRecipe(pluginExecutor, useCustomJar);
                 break;
-            case "assembly":
-                recipe = new AssemblyRecipe(pluginExecutor);
+            case ASSEMBLY:
+                recipe = new AssemblyRecipe(pluginExecutor, useCustomJar);
                 break;
             default:
                 getLog().warn("Unknown packaging mode '" + mode + "', will use 'assembly' instead.");
                 getLog().warn("Supported modes are 'assembly' and 'shade'.");
-                recipe = new AssemblyRecipe(pluginExecutor);
+                recipe = new AssemblyRecipe(pluginExecutor, useCustomJar);
         }
 
-        recipe.setUserJarPluginRequired(Boolean.parseBoolean(useCustomJar));
         recipe.execute();
     }
 

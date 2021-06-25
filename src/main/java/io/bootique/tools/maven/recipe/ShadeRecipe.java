@@ -3,7 +3,6 @@ package io.bootique.tools.maven.recipe;
 import io.bootique.tools.maven.MavenArtifact;
 import io.bootique.tools.maven.PluginExecutor;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
@@ -12,8 +11,8 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
  */
 public class ShadeRecipe extends Recipe {
 
-    public ShadeRecipe(PluginExecutor pluginExecutor) {
-        super(pluginExecutor);
+    public ShadeRecipe(PluginExecutor pluginExecutor, boolean useCustomJar) {
+        super(pluginExecutor, useCustomJar);
     }
 
     @Override
@@ -22,9 +21,23 @@ public class ShadeRecipe extends Recipe {
         executeShadePlugin();
     }
 
-    @Override
-    protected Xpp3Dom getDefaultJarConfig() {
-        return configuration();
+    protected void executeJarPlugin() throws MojoExecutionException {
+        if(pluginExecutor.hasJarPluginExecutions()) {
+            pluginExecutor.getLog().info("maven-jar-plugin default execution result is used");
+            return;
+        }
+
+        MavenArtifact artifact = new MavenArtifact(
+                "org.apache.maven.plugins",
+                "maven-jar-plugin",
+                "3.2.0"
+        );
+
+        pluginExecutor.execute(
+                artifact,
+                goal("jar"),
+                configuration(element("classifier", "bq"))
+        );
     }
 
     void executeShadePlugin() throws MojoExecutionException {
